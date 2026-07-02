@@ -25,22 +25,22 @@ func generateCaseDiscriminant(
     }.joined(separator: "\n                ")
 
     return """
-        \(accessModifier)enum Case: Finite_Primitives.Finite.Enumerable, Sendable {
-                \(caseCases)
+            \(accessModifier)enum Case: Finite_Primitives.Finite.Enumerable, Sendable {
+                    \(caseCases)
 
-                \(inlinableAttr)\(accessModifier)static var count: Cardinal_Primitives.Cardinal { Cardinal_Primitives.Cardinal(\(caseCount)) }
+                    \(inlinableAttr)\(accessModifier)static var count: Cardinal_Primitives.Cardinal { Cardinal_Primitives.Cardinal(\(caseCount)) }
 
-                \(inlinableAttr)\(accessModifier)var ordinal: Ordinal_Primitives.Ordinal {
-                    switch self {
-                    \(caseOrdinalCases)
+                    \(inlinableAttr)\(accessModifier)var ordinal: Ordinal_Primitives.Ordinal {
+                        switch self {
+                        \(caseOrdinalCases)
+                        }
+                    }
+
+                    \(inlinableAttr)\(accessModifier)init(__unchecked: Void, ordinal: Ordinal_Primitives.Ordinal) {
+                        switch ordinal.rawValue {
+                        \(uncheckedInitCases)
+                        }
                     }
                 }
-
-                \(inlinableAttr)\(accessModifier)init(__unchecked: Void, ordinal: Ordinal_Primitives.Ordinal) {
-                    switch ordinal.rawValue {
-                    \(uncheckedInitCases)
-                    }
-                }
-            }
-    """
+        """
 }

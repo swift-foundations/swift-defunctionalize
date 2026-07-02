@@ -1,5 +1,5 @@
-import Testing
 public import Defunctionalize
+import Testing
 
 // MARK: - Basic Witness Struct
 

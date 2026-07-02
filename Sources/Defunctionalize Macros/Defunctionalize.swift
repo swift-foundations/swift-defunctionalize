@@ -1,5 +1,5 @@
-@_exported public import Optic_Primitives
 @_exported public import Finite_Primitives
+@_exported public import Optic_Primitives
 
 /// Extracts a first-order call algebra from a witness struct (Reynolds 1972).
 ///
@@ -20,7 +20,8 @@
 /// // UserService.Calls.Case.allCases
 /// ```
 @attached(member, names: arbitrary)
-public macro Defunctionalize() = #externalMacro(
-    module: "Defunctionalize_Macros_Implementation",
-    type: "DefunctionalizeMacro"
-)
+public macro Defunctionalize() =
+    #externalMacro(
+        module: "Defunctionalize_Macros_Implementation",
+        type: "DefunctionalizeMacro"
+    )

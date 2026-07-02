@@ -1,7 +1,7 @@
+import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-import SwiftDiagnostics
 
 // MARK: - Extraction Types
 
@@ -50,7 +50,8 @@ struct Parameter {
     var base: TypeSyntax {
         var result = type
         if ownership.isAnnotated,
-           let attributed = result.as(AttributedTypeSyntax.self) {
+            let attributed = result.as(AttributedTypeSyntax.self)
+        {
             result = attributed.baseType
         }
         if let attributed = result.as(AttributedTypeSyntax.self) {
@@ -77,18 +78,23 @@ func extractFunction(from type: TypeSyntax) -> FunctionTypeSyntax? {
     if let attributed = type.as(AttributedTypeSyntax.self) { return extractFunction(from: attributed.baseType) }
     if let optional = type.as(OptionalTypeSyntax.self) { return extractFunction(from: optional.wrappedType) }
     if let tuple = type.as(TupleTypeSyntax.self),
-       tuple.elements.count == 1,
-       let element = tuple.elements.first { return extractFunction(from: element.type) }
+        tuple.elements.count == 1,
+        let element = tuple.elements.first
+    {
+        return extractFunction(from: element.type)
+    }
     return nil
 }
 
 /// Extracts parameters from a function type, detecting ownership annotations.
 func extractParameters(from function: FunctionTypeSyntax) -> [Parameter] {
     function.parameters.map { param in
-        let label: String? = param.secondName?.text ?? {
-            guard let first = param.firstName?.text, first != "_" else { return nil }
-            return first
-        }()
+        let label: String? =
+            param.secondName?.text
+            ?? {
+                guard let first = param.firstName?.text, first != "_" else { return nil }
+                return first
+            }()
 
         var ownership = Parameter.Ownership.none
         if let attributed = param.type.as(AttributedTypeSyntax.self) {
@@ -112,14 +118,14 @@ func extractParameters(from function: FunctionTypeSyntax) -> [Parameter] {
 func extractProperties(from structDecl: StructDeclSyntax) -> [Property] {
     structDecl.memberBlock.members.compactMap { member in
         guard let varDecl = member.decl.as(VariableDeclSyntax.self),
-              (varDecl.bindingSpecifier.tokenKind == .keyword(.var) ||
-               varDecl.bindingSpecifier.tokenKind == .keyword(.let)),
-              !varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.static) }),
-              let binding = varDecl.bindings.first,
-              let identifier = binding.pattern.as(IdentifierPatternSyntax.self),
-              let typeAnnotation = binding.typeAnnotation,
-              binding.accessorBlock == nil,
-              let function = extractFunction(from: typeAnnotation.type) else {
+            varDecl.bindingSpecifier.tokenKind == .keyword(.var) || varDecl.bindingSpecifier.tokenKind == .keyword(.let),
+            !varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.static) }),
+            let binding = varDecl.bindings.first,
+            let identifier = binding.pattern.as(IdentifierPatternSyntax.self),
+            let typeAnnotation = binding.typeAnnotation,
+            binding.accessorBlock == nil,
+            let function = extractFunction(from: typeAnnotation.type)
+        else {
             return nil
         }
 
@@ -140,10 +146,12 @@ func expand(
     let properties = extractProperties(from: structDecl)
 
     guard !properties.isEmpty else {
-        context.diagnose(Diagnostic(
-            node: node,
-            message: DefunctionalizeMacro.Diagnostic.noClosureProperties
-        ))
+        context.diagnose(
+            Diagnostic(
+                node: node,
+                message: DefunctionalizeMacro.Diagnostic.noClosureProperties
+            )
+        )
         return []
     }
 
@@ -173,11 +181,13 @@ func expand(
         let params: [(label: String?, type: String)] = prop.copyable.map {
             ($0.label, $0.base.trimmedDescription)
         }
-        members.append(generateExtractionProperty(
-            caseName: prop.case,
-            parameters: params,
-            isPublic: isPublic
-        ).description)
+        members.append(
+            generateExtractionProperty(
+                caseName: prop.case,
+                parameters: params,
+                isPublic: isPublic
+            ).description
+        )
     }
 
     // 3. Case discriminant
@@ -188,60 +198,73 @@ func expand(
     let caseCases = properties.map { "case .\($0.case): .\($0.case)" }
         .joined(separator: "\n            ")
 
-    members.append("""
-        \(inline)\(access)var `case`: Case {
-                switch self {
-                \(caseCases)
+    members.append(
+        """
+            \(inline)\(access)var `case`: Case {
+                    switch self {
+                    \(caseCases)
+                    }
                 }
-            }
-    """)
+        """
+    )
 
     // 5. Prisms struct
     let prisms = properties.map { prop in
-        generatePrism(for: PrismCase(
-            caseName: prop.case,
-            rootTypeName: "Calls",
-            parameters: prop.copyable.map { ($0.label, $0.base.trimmedDescription) }
-        ))
+        generatePrism(
+            for: PrismCase(
+                caseName: prop.case,
+                rootTypeName: "Calls",
+                parameters: prop.copyable.map { ($0.label, $0.base.trimmedDescription) }
+            )
+        )
     }.joined(separator: "\n\n        ")
 
-    members.append("""
-        \(access)struct Prisms: Sendable {
-                \(inline)\(access)init() {}
+    members.append(
+        """
+            \(access)struct Prisms: Sendable {
+                    \(inline)\(access)init() {}
 
-                \(prisms)
-            }
-    """)
+                    \(prisms)
+                }
+        """
+    )
 
     // 6. static var prisms
     members.append("\(inline)\(access)static var prisms: Prisms { Prisms() }")
 
     // 7. is(_:)
-    members.append("""
-        \(inline)\(access)func `is`<Value>(_ keyPath: KeyPath<Prisms, Optic_Primitives.Optic.Prism<Calls, Value>>) -> Bool {
-                Self.prisms[keyPath: keyPath].extract(self) != nil
-            }
-    """)
+    members.append(
+        """
+            \(inline)\(access)func `is`<Value>(_ keyPath: KeyPath<Prisms, Optic_Primitives.Optic.Prism<Calls, Value>>) -> Bool {
+                    Self.prisms[keyPath: keyPath].extract(self) != nil
+                }
+        """
+    )
 
     // 8. subscript[prism:]
-    members.append("""
-        \(inline)\(access)subscript<Value>(prism keyPath: KeyPath<Prisms, Optic_Primitives.Optic.Prism<Calls, Value>>) -> Value? {
-                Self.prisms[keyPath: keyPath].extract(self)
-            }
-    """)
+    members.append(
+        """
+            \(inline)\(access)subscript<Value>(prism keyPath: KeyPath<Prisms, Optic_Primitives.Optic.Prism<Calls, Value>>) -> Value? {
+                    Self.prisms[keyPath: keyPath].extract(self)
+                }
+        """
+    )
 
     // 9. modify(_:_:)
-    members.append("""
-        \(inline)\(access)mutating func modify<Value>(_ keyPath: KeyPath<Prisms, Optic_Primitives.Optic.Prism<Calls, Value>>, _ transform: (inout Value) -> Void) {
-                let prism = Self.prisms[keyPath: keyPath]
-                guard var value = prism.extract(self) else { return }
-                transform(&value)
-                self = prism.embed(value)
-            }
-    """)
+    members.append(
+        """
+            \(inline)\(access)mutating func modify<Value>(_ keyPath: KeyPath<Prisms, Optic_Primitives.Optic.Prism<Calls, Value>>, _ transform: (inout Value) -> Void) {
+                    let prism = Self.prisms[keyPath: keyPath]
+                    guard var value = prism.extract(self) else { return }
+                    transform(&value)
+                    self = prism.embed(value)
+                }
+        """
+    )
 
     // Build the enum
-    let inheritance = sendable
+    let inheritance =
+        sendable
         ? ": Sendable, Optic_Primitives.__OpticPrismAccessible"
         : ": Optic_Primitives.__OpticPrismAccessible"
 

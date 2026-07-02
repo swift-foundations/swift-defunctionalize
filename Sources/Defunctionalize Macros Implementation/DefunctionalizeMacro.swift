@@ -1,7 +1,7 @@
+import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-import SwiftDiagnostics
 
 // MARK: - DefunctionalizeMacro
 
@@ -37,10 +37,12 @@ extension DefunctionalizeMacro: MemberMacro {
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         guard let structDecl = declaration.as(StructDeclSyntax.self) else {
-            context.diagnose(SwiftDiagnostics.Diagnostic(
-                node: node,
-                message: Diagnostic.requiresStruct
-            ))
+            context.diagnose(
+                SwiftDiagnostics.Diagnostic(
+                    node: node,
+                    message: Diagnostic.requiresStruct
+                )
+            )
             return []
         }
 
