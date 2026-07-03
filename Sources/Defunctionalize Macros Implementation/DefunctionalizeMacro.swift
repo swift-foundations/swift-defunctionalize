@@ -14,6 +14,7 @@ public struct DefunctionalizeMacro {
             switch self {
             case .requiresStruct:
                 "@Defunctionalize can only be applied to structs"
+
             case .noClosureProperties:
                 "@Defunctionalize requires at least one function-typed stored property"
             }

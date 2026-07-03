@@ -41,7 +41,7 @@ struct Parameter {
 
         var isAnnotated: Bool { isInout || specifier != nil }
 
-        static let none = Ownership(isInout: false, specifier: nil)
+        static let none = Self(isInout: false, specifier: nil)
     }
 
     let ownership: Ownership
