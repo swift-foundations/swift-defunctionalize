@@ -36,6 +36,8 @@ extension DefunctionalizeMacro: MemberMacro {
         providingMembersOf declaration: some DeclGroupSyntax,
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
+            // Untyped throws forced by external protocol SwiftSyntaxMacros (macro expansion).
+            // swiftlint:disable:next typed_throws_required
     ) throws -> [DeclSyntax] {
         guard let structDecl = declaration.as(StructDeclSyntax.self) else {
             context.diagnose(
