@@ -10,7 +10,9 @@ struct Property {
     /// The identifier text as it appears in source, including backtick escaping.
     let name: String
     let parameters: [Parameter]
+}
 
+extension Property {
     /// The case name for the Calls enum: strips leading `_` from the property name.
     var `case`: String {
         guard name.hasPrefix("_") || (name.hasPrefix("`") && name.dropFirst().hasPrefix("_")) else {
@@ -34,17 +36,14 @@ struct Property {
 struct Parameter {
     let label: String?
     let type: TypeSyntax
+    let ownership: Ownership
+}
 
+extension Parameter {
     struct Ownership {
         let isInout: Bool
         let specifier: Keyword?
-
-        var isAnnotated: Bool { isInout || specifier != nil }
-
-        static let none = Self(isInout: false, specifier: nil)
     }
-
-    let ownership: Ownership
 
     /// The type stripped of ownership specifiers and @escaping.
     var base: TypeSyntax {
@@ -68,6 +67,12 @@ struct Parameter {
         }
         return result.trimmed
     }
+}
+
+extension Parameter.Ownership {
+    var isAnnotated: Bool { isInout || specifier != nil }
+
+    static let none = Self(isInout: false, specifier: nil)
 }
 
 // MARK: - Extraction
