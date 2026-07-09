@@ -10,65 +10,65 @@ struct DefunctionalizeTests {
 
         // MARK: - Basic call algebra
 
-        @Test func callsCaseGeneration() {
+        @Test func `calls case generation`() {
             let call = UserService.Calls.fetchUser(42)
             #expect(call.fetchUser == 42)
         }
 
-        @Test func labeledCallsCase() {
+        @Test func `labeled calls case`() {
             let call = UserService.Calls.deleteUser(id: 7)
             #expect(call.deleteUser == 7)
         }
 
-        @Test func parameterlessCase() {
+        @Test func `parameterless case`() {
             let call = UserService.Calls.reset
             #expect(call.reset != nil)
         }
 
-        @Test func nonFunctionFieldExcluded() {
+        @Test func `non function field excluded`() {
             // timeout is not a closure — excluded from Calls
             #expect(UserService.Calls.Case.count.rawValue == 3)
         }
 
         // MARK: - Multi-parameter
 
-        @Test func multiParamExtraction() {
+        @Test func `multi param extraction`() {
             let call = FileService.Calls.write(path: "/tmp", contents: [1, 2])
             let extracted = call.write
             #expect(extracted?.path == "/tmp")
         }
 
-        @Test func unlabeledParams() {
+        @Test func `unlabeled params`() {
             let call = Calculator.Calls.add(1, 2)
             #expect(call.add != nil)
         }
 
         // MARK: - Effects excluded from parameters
 
-        @Test func throwingClosureParametersOnly() {
+        @Test func `throwing closure parameters only`() {
             let call = ThrowingService.Calls.fetch(42)
             #expect(call.fetch == 42)
         }
 
-        @Test func asyncThrowingParametersOnly() {
+        @Test func `async throwing parameters only`() {
             let call = ThrowingService.Calls.save("data")
             #expect(call.save == "data")
         }
 
         // MARK: - Case discriminant
 
-        @Test func caseDiscriminant() {
+        @Test func `case discriminant`() {
             #expect(UserService.Calls.Case.fetchUser.ordinal.rawValue == 0)
             #expect(UserService.Calls.Case.deleteUser.ordinal.rawValue == 1)
             #expect(UserService.Calls.Case.reset.ordinal.rawValue == 2)
         }
 
-        @Test func caseProperty() {
+        @Test func `case property`() {
             #expect(UserService.Calls.fetchUser(1).case == .fetchUser)
             #expect(UserService.Calls.reset.case == .reset)
         }
 
-        @Test func caseEnumeration() {
+        @Test func `case enumeration`() {
             var count = 0
             for _ in UserService.Calls.Case.allCases {
                 count += 1
@@ -78,17 +78,17 @@ struct DefunctionalizeTests {
 
         // MARK: - Prisms
 
-        @Test func prismExtract() {
+        @Test func `prism extract`() {
             #expect(UserService.Calls.prisms.fetchUser.extract(.fetchUser(42)) == 42)
             #expect(UserService.Calls.prisms.fetchUser.extract(.reset) == nil)
         }
 
-        @Test func isMethod() {
+        @Test func `is method`() {
             #expect(UserService.Calls.fetchUser(1).is(\.fetchUser) == true)
             #expect(UserService.Calls.fetchUser(1).is(\.reset) == false)
         }
 
-        @Test func prismSubscript() {
+        @Test func `prism subscript`() {
             #expect(UserService.Calls.fetchUser(42)[prism: \.fetchUser] == 42)
         }
 
@@ -100,14 +100,14 @@ struct DefunctionalizeTests {
 
         // MARK: - Leading underscore stripping
 
-        @Test func underscoreStripping() {
+        @Test func `underscore stripping`() {
             let call = WithUnderscore.Calls.fetch(42)
             #expect(call.fetch == 42)
         }
 
         // MARK: - Mixed closure + non-closure
 
-        @Test func mixedOnlyClosures() {
+        @Test func `mixed only closures`() {
             // Only load and save are in Calls — name is excluded
             #expect(Mixed.Calls.Case.count.rawValue == 2)
             let call = Mixed.Calls.load("key")
@@ -116,7 +116,7 @@ struct DefunctionalizeTests {
 
         // MARK: - Single operation
 
-        @Test func singleOperation() {
+        @Test func `single operation`() {
             let call = SingleOp.Calls.execute("hello")
             #expect(call.execute == "hello")
             #expect(SingleOp.Calls.Case.count.rawValue == 1)
