@@ -2,11 +2,11 @@ import Testing
 
 @testable import Defunctionalize
 
-@Suite("Defunctionalize")
-struct DefunctionalizeTests {
+@Suite
+struct Test {
 
-    @Suite("Unit")
-    struct Unit {
+    @Suite
+    struct `Unit` {
 
         // MARK: - Basic call algebra
 
