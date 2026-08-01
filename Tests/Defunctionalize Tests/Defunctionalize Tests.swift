@@ -122,4 +122,10 @@ struct Test {
             #expect(SingleOp.Calls.Case.count.rawValue == 1)
         }
     }
+
+    @Suite
+    struct `Edge Case` {}
+
+    @Suite
+    struct Integration {}
 }

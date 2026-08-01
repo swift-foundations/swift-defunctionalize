@@ -3,78 +3,6 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-// MARK: - Extraction Types
-
-/// A function-typed stored property extracted from the source struct.
-struct Property {
-    /// The identifier text as it appears in source, including backtick escaping.
-    let name: String
-    let parameters: [Parameter]
-}
-
-extension Property {
-    /// The case name for the Calls enum: strips leading `_` from the property name.
-    var `case`: String {
-        guard name.hasPrefix("_") || (name.hasPrefix("`") && name.dropFirst().hasPrefix("_")) else {
-            return name
-        }
-        let unescaped = name.hasPrefix("`") ? String(name.dropFirst().dropLast()) : name
-        let stripped = String(unescaped.dropFirst())
-        if stripped.contains(" ") || isSwiftKeyword(stripped) {
-            return "`\(stripped)`"
-        }
-        return stripped
-    }
-
-    /// Parameters eligible for the call algebra (excludes ownership-annotated).
-    var copyable: [Parameter] {
-        parameters.filter { !$0.ownership.isAnnotated }
-    }
-}
-
-/// A parameter of a function-typed property.
-struct Parameter {
-    let label: String?
-    let type: TypeSyntax
-    let ownership: Ownership
-}
-
-extension Parameter {
-    struct Ownership {
-        let isInout: Bool
-        let specifier: Keyword?
-    }
-
-    /// The type stripped of ownership specifiers and @escaping.
-    var base: TypeSyntax {
-        var result = type
-        if ownership.isAnnotated,
-            let attributed = result.as(AttributedTypeSyntax.self)
-        {
-            result = attributed.baseType
-        }
-        if let attributed = result.as(AttributedTypeSyntax.self) {
-            let filtered = attributed.attributes.filter { attr in
-                guard case .attribute(let a) = attr else { return true }
-                return a.attributeName.trimmedDescription != "escaping"
-            }
-            if filtered.isEmpty && attributed.specifiers.isEmpty {
-                return attributed.baseType.trimmed
-            }
-            var cleaned = attributed
-            cleaned.attributes = AttributeListSyntax(filtered)
-            return TypeSyntax(cleaned).trimmed
-        }
-        return result.trimmed
-    }
-}
-
-extension Parameter.Ownership {
-    var isAnnotated: Bool { isInout || specifier != nil }
-
-    static let none = Self(isInout: false, specifier: nil)
-}
-
 // MARK: - Extraction
 
 /// Extracts function type from a type annotation, unwrapping Optional and Attributed wrappers.
@@ -286,7 +214,7 @@ func expand(
 
 // MARK: - Keyword Check
 
-private func isSwiftKeyword(_ identifier: String) -> Bool {
+func isSwiftKeyword(_ identifier: String) -> Bool {
     [
         "associatedtype", "class", "deinit", "enum", "extension", "fileprivate",
         "func", "import", "init", "inout", "internal", "let", "open", "operator",

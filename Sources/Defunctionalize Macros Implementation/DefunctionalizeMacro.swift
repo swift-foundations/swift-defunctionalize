@@ -7,31 +7,6 @@ import SwiftSyntaxMacros
 
 public struct DefunctionalizeMacro {}
 
-extension DefunctionalizeMacro {
-    enum Diagnostic: String, DiagnosticMessage {
-        case requiresStruct
-        case noClosureProperties
-    }
-}
-
-extension DefunctionalizeMacro.Diagnostic {
-    var message: String {
-        switch self {
-        case .requiresStruct:
-            "@Defunctionalize can only be applied to structs"
-
-        case .noClosureProperties:
-            "@Defunctionalize requires at least one function-typed stored property"
-        }
-    }
-
-    var diagnosticID: MessageID {
-        MessageID(domain: "DefunctionalizeMacro", id: rawValue)
-    }
-
-    var severity: DiagnosticSeverity { .error }
-}
-
 // MARK: - MemberMacro
 
 extension DefunctionalizeMacro: MemberMacro {
@@ -42,6 +17,10 @@ extension DefunctionalizeMacro: MemberMacro {
         in context: some MacroExpansionContext
             // Untyped throws forced by external protocol SwiftSyntaxMacros (macro expansion).
             // swiftlint:disable:next typed_throws_required
+            // swift-linter:disable:next untyped throws
+            // REASON: MemberMacro.expansion(of:providingMembersOf:conformingTo:in:) is an
+            // external SwiftSyntaxMacros protocol requirement spelled with untyped `throws`;
+            // no typed `E` can be named here without breaking the conformance.
     ) throws -> [DeclSyntax] {
         guard let structDecl = declaration.as(StructDeclSyntax.self) else {
             context.diagnose(

@@ -17,7 +17,7 @@ func generateCaseDiscriminant(
     }.joined(separator: "\n                ")
 
     let uncheckedInitCases = caseNames.enumerated().map { index, name in
-        if index == caseNames.count - 1 {
+        if index == caseNames.indices.last {
             "default: self = .\(name)"
         } else {
             "case \(index): self = .\(name)"
