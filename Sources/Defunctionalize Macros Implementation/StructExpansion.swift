@@ -8,8 +8,12 @@ import SwiftSyntaxMacros
 /// Extracts function type from a type annotation, unwrapping Optional and Attributed wrappers.
 func extractFunction(from type: TypeSyntax) -> FunctionTypeSyntax? {
     if let function = type.as(FunctionTypeSyntax.self) { return function }
-    if let attributed = type.as(AttributedTypeSyntax.self) { return extractFunction(from: attributed.baseType) }
-    if let optional = type.as(OptionalTypeSyntax.self) { return extractFunction(from: optional.wrappedType) }
+    if let attributed = type.as(AttributedTypeSyntax.self) {
+        return extractFunction(from: attributed.baseType)
+    }
+    if let optional = type.as(OptionalTypeSyntax.self) {
+        return extractFunction(from: optional.wrappedType)
+    }
     if let tuple = type.as(TupleTypeSyntax.self),
         tuple.elements.count == 1,
         let element = tuple.elements.first
@@ -35,8 +39,13 @@ func extractParameters(from function: FunctionTypeSyntax) -> [Parameter] {
                 if let simple = specifier.as(SimpleTypeSpecifierSyntax.self) {
                     switch simple.specifier.tokenKind {
                     case .keyword(.inout): ownership = .init(isInout: true, specifier: nil)
-                    case .keyword(.borrowing): ownership = .init(isInout: false, specifier: .borrowing)
-                    case .keyword(.consuming): ownership = .init(isInout: false, specifier: .consuming)
+
+                    case .keyword(.borrowing):
+                        ownership = .init(isInout: false, specifier: .borrowing)
+
+                    case .keyword(.consuming):
+                        ownership = .init(isInout: false, specifier: .consuming)
+
                     default: break
                     }
                 }
@@ -51,7 +60,8 @@ func extractParameters(from function: FunctionTypeSyntax) -> [Parameter] {
 func extractProperties(from structDecl: StructDeclSyntax) -> [Property] {
     structDecl.memberBlock.members.compactMap { member in
         guard let varDecl = member.decl.as(VariableDeclSyntax.self),
-            varDecl.bindingSpecifier.tokenKind == .keyword(.var) || varDecl.bindingSpecifier.tokenKind == .keyword(.let),
+            varDecl.bindingSpecifier.tokenKind == .keyword(.var)
+                || varDecl.bindingSpecifier.tokenKind == .keyword(.let),
             !varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.static) }),
             let binding = varDecl.bindings.first,
             let identifier = binding.pattern.as(IdentifierPatternSyntax.self),
