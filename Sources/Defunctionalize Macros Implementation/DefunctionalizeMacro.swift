@@ -16,11 +16,11 @@ extension DefunctionalizeMacro: MemberMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
             // Untyped throws forced by external protocol SwiftSyntaxMacros (macro expansion).
-            // swiftlint:disable:next typed_throws_required
             // swift-linter:disable:next untyped throws
             // REASON: MemberMacro.expansion(of:providingMembersOf:conformingTo:in:) is an
             // external SwiftSyntaxMacros protocol requirement spelled with untyped `throws`;
             // no typed `E` can be named here without breaking the conformance.
+            // swiftlint:disable:next typed_throws_required
     ) throws -> [DeclSyntax] {
         guard let structDecl = declaration.as(StructDeclSyntax.self) else {
             context.diagnose(
