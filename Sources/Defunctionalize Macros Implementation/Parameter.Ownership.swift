@@ -1,7 +1,5 @@
 import SwiftSyntax
 
-// MARK: - Parameter.Ownership
-
 extension Parameter {
     struct Ownership {
         let isInout: Bool

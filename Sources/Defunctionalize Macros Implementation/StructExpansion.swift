@@ -3,9 +3,6 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-// MARK: - Extraction
-
-/// Extracts function type from a type annotation, unwrapping Optional and Attributed wrappers.
 func extractFunction(from type: TypeSyntax) -> FunctionTypeSyntax? {
     if let function = type.as(FunctionTypeSyntax.self) { return function }
     if let attributed = type.as(AttributedTypeSyntax.self) {
@@ -23,7 +20,6 @@ func extractFunction(from type: TypeSyntax) -> FunctionTypeSyntax? {
     return nil
 }
 
-/// Extracts parameters from a function type, detecting ownership annotations.
 func extractParameters(from function: FunctionTypeSyntax) -> [Parameter] {
     function.parameters.map { param in
         let label: String? =
@@ -56,7 +52,6 @@ func extractParameters(from function: FunctionTypeSyntax) -> [Parameter] {
     }
 }
 
-/// Extracts only function-typed stored properties from a struct.
 func extractProperties(from structDecl: StructDeclSyntax) -> [Property] {
     structDecl.memberBlock.members.compactMap { member in
         guard let varDecl = member.decl.as(VariableDeclSyntax.self),
@@ -78,8 +73,6 @@ func extractProperties(from structDecl: StructDeclSyntax) -> [Property] {
         )
     }
 }
-
-// MARK: - Expansion
 
 func expand(
     _ structDecl: StructDeclSyntax,
@@ -106,7 +99,6 @@ func expand(
 
     var members: [String] = []
 
-    // 1. Case declarations
     for prop in properties {
         let params = prop.copyable
         if params.isEmpty {
@@ -119,7 +111,6 @@ func expand(
         }
     }
 
-    // 2. Extraction properties
     for prop in properties {
         let params: [(label: String?, type: String)] = prop.copyable.map {
             ($0.label, $0.base.trimmedDescription)
@@ -133,11 +124,9 @@ func expand(
         )
     }
 
-    // 3. Case discriminant
     let caseNames = properties.map(\.case)
     members.append(generateCaseDiscriminant(caseNames: caseNames, isPublic: isPublic))
 
-    // 4. var case: Case
     let caseCases = properties.map { "case .\($0.case): .\($0.case)" }
         .joined(separator: "\n            ")
 
@@ -151,7 +140,6 @@ func expand(
         """
     )
 
-    // 5. Prisms struct
     let prisms = properties.map { prop in
         generatePrism(
             for: PrismCase(
@@ -172,10 +160,8 @@ func expand(
         """
     )
 
-    // 6. static var prisms
     members.append("\(inline)\(access)static var prisms: Prisms { Prisms() }")
 
-    // 7. is(_:)
     members.append(
         """
             \(inline)\(access)func `is`<Value>(_ keyPath: KeyPath<Prisms, Optic_Primitives.Optic.Prism<Calls, Value>>) -> Bool {
@@ -184,7 +170,6 @@ func expand(
         """
     )
 
-    // 8. subscript[prism:]
     members.append(
         """
             \(inline)\(access)subscript<Value>(prism keyPath: KeyPath<Prisms, Optic_Primitives.Optic.Prism<Calls, Value>>) -> Value? {
@@ -193,7 +178,6 @@ func expand(
         """
     )
 
-    // 9. modify(_:_:)
     members.append(
         """
             \(inline)\(access)mutating func modify<Value>(_ keyPath: KeyPath<Prisms, Optic_Primitives.Optic.Prism<Calls, Value>>, _ transform: (inout Value) -> Void) {
@@ -205,7 +189,6 @@ func expand(
         """
     )
 
-    // Build the enum
     let inheritance =
         sendable
         ? ": Sendable, Optic_Primitives.__OpticPrismAccessible"
@@ -221,8 +204,6 @@ func expand(
 
     return [callsEnum]
 }
-
-// MARK: - Keyword Check
 
 func isSwiftKeyword(_ identifier: String) -> Bool {
     [

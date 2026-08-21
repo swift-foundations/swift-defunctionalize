@@ -1,8 +1,5 @@
 import SwiftSyntax
 
-// MARK: - Parameter
-
-/// A parameter of a function-typed property.
 struct Parameter {
     let label: String?
     let type: TypeSyntax
@@ -10,7 +7,7 @@ struct Parameter {
 }
 
 extension Parameter {
-    /// The type stripped of ownership specifiers and @escaping.
+
     var base: TypeSyntax {
         var result = type
         if ownership.isAnnotated,

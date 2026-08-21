@@ -1,7 +1,5 @@
 import SwiftDiagnostics
 
-// MARK: - DefunctionalizeMacro.Diagnostic
-
 extension DefunctionalizeMacro {
     enum Diagnostic: String, DiagnosticMessage {
         case requiresStruct

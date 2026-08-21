@@ -69,10 +69,7 @@ let package = Package(
             name: "Defunctionalize Tests",
             dependencies: [
                 "Defunctionalize",
-                // A `.macro` target propagates none of its own product
-                // dependencies into the test bundle Swift Build links, so the
-                // macro implementation's SwiftSyntax symbols have to be named
-                // on the test target that pulls it in.
+
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),

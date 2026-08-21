@@ -8,8 +8,6 @@ struct Test {
     @Suite
     struct `Unit` {
 
-        // MARK: - Basic call algebra
-
         @Test func `calls case generation`() {
             let call = UserService.Calls.fetchUser(42)
             #expect(call.fetchUser == 42)
@@ -26,11 +24,9 @@ struct Test {
         }
 
         @Test func `non function field excluded`() {
-            // timeout is not a closure — excluded from Calls
+
             #expect(UserService.Calls.Case.count.rawValue == 3)
         }
-
-        // MARK: - Multi-parameter
 
         @Test func `multi param extraction`() {
             let call = FileService.Calls.write(path: "/tmp", contents: [1, 2])
@@ -43,8 +39,6 @@ struct Test {
             #expect(call.add != nil)
         }
 
-        // MARK: - Effects excluded from parameters
-
         @Test func `throwing closure parameters only`() {
             let call = ThrowingService.Calls.fetch(42)
             #expect(call.fetch == 42)
@@ -54,8 +48,6 @@ struct Test {
             let call = ThrowingService.Calls.save("data")
             #expect(call.save == "data")
         }
-
-        // MARK: - Case discriminant
 
         @Test func `case discriminant`() {
             #expect(UserService.Calls.Case.fetchUser.ordinal.rawValue == 0)
@@ -75,8 +67,6 @@ struct Test {
             }
             #expect(count == 3)
         }
-
-        // MARK: - Prisms
 
         @Test func `prism extract`() {
             #expect(UserService.Calls.prisms.fetchUser.extract(.fetchUser(42)) == 42)
@@ -98,23 +88,17 @@ struct Test {
             #expect(call.fetchUser == 99)
         }
 
-        // MARK: - Leading underscore stripping
-
         @Test func `underscore stripping`() {
             let call = WithUnderscore.Calls.fetch(42)
             #expect(call.fetch == 42)
         }
 
-        // MARK: - Mixed closure + non-closure
-
         @Test func `mixed only closures`() {
-            // Only load and save are in Calls — name is excluded
+
             #expect(Mixed.Calls.Case.count.rawValue == 2)
             let call = Mixed.Calls.load("key")
             #expect(call.load == "key")
         }
-
-        // MARK: - Single operation
 
         @Test func `single operation`() {
             let call = SingleOp.Calls.execute("hello")

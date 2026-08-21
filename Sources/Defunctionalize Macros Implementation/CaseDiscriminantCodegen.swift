@@ -1,7 +1,6 @@
 import SwiftSyntax
 import SwiftSyntaxBuilder
 
-/// Generates a `Case` discriminant enum conforming to `Finite.Enumerable`.
 func generateCaseDiscriminant(
     caseNames: [String],
     isPublic: Bool
